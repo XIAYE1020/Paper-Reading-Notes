@@ -82,17 +82,17 @@
 
 如图所示，一条PCIe链路由多个通道组成，每个通道由一对差分信号对（一个用于发送，一个用于接收）组成，从而实现全双工通信。PCIe链路可以灵活配置为×N（其中N表示通道数，例如×1、×4和×16），以平衡成本和性能要求。
 
-<img src="D:\XiaYe\Documents\Master_Degree\Surveys\2026-4-24-scale-up-GPU\Note.assets\image-20260504222142379.png" alt="image-20260504222142379" style="zoom: 50%;" />
+<img src="./Note.assets/image-20260504222142379.png" alt="image-20260504222142379" style="zoom: 50%;" />
 
 ### 各代PCIe规格
 
-![image-20260504224046557](D:\XiaYe\Documents\Master_Degree\Surveys\2026-4-24-scale-up-GPU\Note.assets\image-20260504224046557.png)
+![image-20260504224046557](./Note.assets/image-20260504224046557.png)
 
 ### PCIe 6.0
 
 采用**四脉冲振幅调制（4-Level Pulse Amplitude Modulation，PAM4）**替代**传统非归零编码（Non-Return-to-Zero encoding，NRZ）**
 
-<img src="D:\XiaYe\Documents\Master_Degree\Surveys\2026-4-24-scale-up-GPU\Note.assets\image-20260504223755616.png" alt="image-20260504223755616" style="zoom:50%;" />
+<img src="./Note.assets/image-20260504223755616.png" alt="image-20260504223755616" style="zoom:50%;" />
 
 ### PCIe的局限性
 
@@ -1854,7 +1854,6 @@ $$
 #### （2）OISA 智能感知机制
 
 $$
-
 \text{Packet + 2-byte sensing tag} \rightarrow \text{Network state collection}
 $$
 
