@@ -743,8 +743,8 @@ $$
 - [x] DualPipe algorithm
 - [x] cross-node all-to-all communication kernels
 - [x] FP8 Training
-- [ ] Prefilling
-- [ ] Decoding
+- [x] Prefilling
+- [x] Decoding
 
 ### 一、训练框架（Training Framework）
 
