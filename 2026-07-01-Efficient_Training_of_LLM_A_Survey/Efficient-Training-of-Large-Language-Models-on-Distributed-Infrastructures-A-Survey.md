@@ -6,8 +6,24 @@
 - 类型: Survey
 - 主题: 大语言模型分布式训练系统与基础设施
 - 核心关键词: LLM Training, Distributed Training, Scalability, Efficiency, Reliability, Parallelism, Fault Tolerance
-- 阅读日期:
+- 阅读日期:2026-07-07
 - 阅读进度:
+
+## 0.1 阅读任务列表
+
+- [x] 通读摘要和引言，明确论文讨论的核心问题
+- [ ] 理解 Scalability, Efficiency, Reliability 三个主线
+- [ ] 阅读 Background，整理 LLM 训练 workload 的特点
+- [ ] 阅读 Infrastructure，梳理加速器、网络、存储和调度系统
+- [ ] 阅读 Parallelism Schemes，比较不同并行方式的作用和代价
+- [ ] 阅读 Computation Optimizations，理解算子优化和混合精度训练
+- [ ] 阅读 Memory Optimizations，整理重计算、切分、碎片整理和 offloading
+- [ ] 阅读 Communication Optimizations，理解集合通信、通信调度和网内聚合
+- [ ] 阅读 Fault Tolerance，整理故障分析、异常检测和恢复机制
+- [ ] 阅读 Conclusion and Outlooks，总结未来方向
+- [ ] 补全术语表
+- [ ] 补全代表系统/方法索引
+- [ ] 写出自己的整体总结和评价
 
 ## 1. 一句话总结
 
