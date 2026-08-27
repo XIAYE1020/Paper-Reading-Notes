@@ -662,6 +662,8 @@ Action: Finish[England]
 - [ ] 如何在长程任务中压缩 trajectory，避免上下文长度被历史 Thought / Action / Observation 占满？
 - [ ] 和后来 function calling / tool calling agent 框架相比，ReAct 的核心思想保留了哪些，哪些被工程化替代了？
 - [ ] ==对于强推理任务，什么时候应该优先 CoT / CoT-SC，什么时候应该优先 ReAct？能否自动学习切换策略？==
+- [ ] ==ReAct的thought和CoT的reasoning的具体区别==
+- [ ] ==tool-use/agent和ReAct的区别==
 
 ## 16. 阅读时可随手追加的笔记格式
 

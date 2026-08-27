@@ -543,7 +543,7 @@ assets文件：
 
   ![image-20260711155736864](./Toolformer-Language-Models-Can-Teach-Themselves-to-Use-Tools.assets/image-20260711155736864.png)
 
-- Table 9：在不同测试集上不同k值设定，对模型调用API积极性的影响。==**数据错误：** WebQS, k=1行存在一个数字不一致：0.085 × 17.1 + 0.915 × 19.9 ≈ 19.7==
+- Table 9：在不同测试集上不同k值设定，对模型调用API积极性的影响。==**数据：** WebQS, k=1行存在一个数字不一致：0.085 × 17.1 + 0.915 × 19.9 ≈ 19.7==
 
   ![image-20260711170520099](./Toolformer-Language-Models-Can-Teach-Themselves-to-Use-Tools.assets/image-20260711170520099.png)
 
