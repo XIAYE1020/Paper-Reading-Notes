@@ -706,7 +706,7 @@
 ![image-20260805155912096](./assets/image-20260805155912096.png)
 
 - workload: tool&agent
-- ==笔记：==由于prefill处理时间较长，vLLM和具有chunked prerefill的vLLM在解码过程中会遇到更严重的中断，导致有效缓存容量低于具有prefix caching                    的vLLM。
+- ==笔记：==由于prefill处理时间较长，vLLM和具有chunked prerefill的vLLM在解码过程中会遇到更严重的中断，导致有效缓存容量低于具有prefix caching的vLLM。
 
 ##### Figure 7
 
@@ -925,3 +925,53 @@
 ### 我的总结
 
 - 
+
+## 8. 补充问题
+
+### 1、为什么很多优化都是聚集在prefill阶段的KVCache复用，但是最终评估的时候却仍然是以TBT为主呢？
+
+MOONCAKE 的 TBT 优势主要源于 P/D 分离，而 P/D 分离已经由 DistServe、Splitwise 等工作提出。由于论文主要与 P/D 混部的 vLLM 比较，缺少与已有 P/D 分离系统的端到端基线，因此其 TBT 结果不能充分证明 MOONCAKE 特有机制的增量收益。Mooncake 的创新应该更多通过 TTFT、Prefix Cache 命中率、Prefill GPU 时间和传输效率来验证。
+
+### 2、TBT 和 TPOT 的区别
+
+假设输出 token 的到达时间是：
+
+\[ t_1,t_2,\ldots,t_m \]
+
+#### TBT：相邻 token 的间隔
+
+\[ TBT_i=t_i-t_{i-1} \]
+
+每两个 token 都有一个 TBT，它能够反映生成过程中的波动和卡顿。
+
+#### TPOT：平均每个输出 token 的耗时
+
+通常计算为：
+
+\[ TPOT=\frac{t_m-t_1}{m-1} \]
+
+本质上就是所有普通 TBT 的平均值，因此会平滑掉偶发卡顿。
+
+#### MOONCAKE 的特殊 TBT
+
+MOONCAKE 将一个请求中**最长的 10% token 间隔取平均**，重点衡量最严重的卡顿。
+
+例如有十个间隔：
+
+```
+50、50、50、50、50、50、50、50、50、500 ms
+```
+
+那么：
+
+\[ TPOT=\frac{9\times50+500}{10}=95\text{ ms} \]
+
+但 MOONCAKE 取最慢的 10%，因此：
+
+\[ TBT_{\text{Mooncake}}=500\text{ ms} \]
+
+TPOT 看起来仍然不错，但用户已经经历了一次明显的 500 ms 停顿。
+
+所以可以总结为：
+
+> TPOT 衡量平均出字速度；MOONCAKE 的 TBT 衡量输出过程中较严重的卡顿。论文使用 TBT，是为了验证 P/D 分离能否在优化 Prefill、降低 TTFT 的同时，保护 Decode 的流畅性。
