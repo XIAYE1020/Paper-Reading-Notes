@@ -90,6 +90,63 @@ SGLang 本身不负责选择模板。固定应用可由普通路由代码选择�
 
 模型可以辅助开发者生成模板，DSPy 等高层系统也可以编译到 SGLang，但论文默认方式不是任务模型在执行过程中临时生成并运行 SGLang 源码。普通用户通常只使用已经开发好的 Agent。
 
+## SGLang 总结
+
+**一句话：**SGLang 是一个用于编写和高效执行 **LM Program** 的系统，由 Python 内嵌的前端语言和推理运行时组成。它不是模型，也不是完整 Agent；它把“多次模型调用的程序结构”显式写出来，再让运行时跨调用优化。
+
+```text
+用户 → Agent 的业务逻辑、状态与工具
+     → SGLang 前端：描述提示词、生成、选择、分支和并行
+     → SGLang Runtime 或外部模型 API
+     → 模型
+```
+
+### 1. 它解决什么问题？
+
+复杂 LLM 应用通常包含多次且相互依赖的调用、共享前缀、并行分支和结构化输出。若把每次调用当成互不相关的普通请求，不仅代码难写，还会重复计算前缀 KV Cache，并产生额外的逐 token 解码和 API 等待开销。
+
+### 2. 前端语言做什么？
+
+- 用 `gen`、`select`、`fork`、`join` 等原语描述模型调用和控制结构。
+- 与 Python 的条件、循环和库直接配合；提示词状态 `s` 按提交顺序形成异步流。
+- 支持解释器模式，也可以追踪并编译成计算图，以便进一步优化。
+
+前端主要解决“**工作流怎样表达**”，不负责模型本身的矩阵计算。
+
+### 3. 运行时的三项核心优化
+
+| 优化 | 针对的瓶颈 | 核心做法 |
+|---|---|---|
+| **RadixAttention** | 多次调用反复 prefill 相同前缀 | 用 radix tree 保存和匹配跨请求 KV Cache，并结合 cache-aware scheduling 提高命中率 |
+| **压缩 FSM** | JSON、正则等约束输出仍逐 token forward | 在分支处用 mask 限制候选；把确定的连续路径合并，并通过 jump-forward 一次处理多个已确定 token |
+| **API speculative execution** | 黑盒 API 的多调用串行等待和重复输入 | 让前一次 API 调用越过停止位置继续生成；若后续提示与猜测相符，就复用多生成的内容 |
+
+三者分别主要减少：**重复 prefill、结构化输出的 decode 次数、API 多调用等待**。
+
+### 4. 它在 Agent 中处于哪里？
+
+SGLang 位于 Agent 的**工作流编排和模型调用层**。Agent 的状态管理、工具实现、权限和业务规则仍由应用负责；开发者或高层编译器编写可复用模板，路由器选择模板和参数，模型只在 `gen/select` 等位置生成内容，SGLang Runtime 负责高效执行。
+
+因此，不需要为每一种用户措辞写一段新代码；只有任务流结构真正变化时，才可能需要增加或修改模板。
+
+### 5. 前端、运行时和 vLLM 的关系
+
+- SGLang 前端可以调用自己的 SGLang Runtime，也可以调用 OpenAI、Anthropic 等 API。
+- SGLang Runtime 也可以作为独立推理服务使用；前端提供结构提示时，两者协同优化效果更好。
+- SGLang Runtime 与 vLLM 属于同一层的推理系统，可以替代使用；论文中的 SGLang 并不是运行在用户终端、辅助 vLLM 的客户端，也不是直接复用 vLLM 实现。
+
+### 6. 什么时候最有价值？
+
+最适合多调用、共享前缀、分支并行以及 JSON/正则约束输出。若任务只是一次普通生成，没有可复用前缀和输出约束，收益通常较小。对于黑盒 API，外部 SGLang 无法直接操作其 KV Cache 和 logits，只能使用 API speculative execution 等客户端优化。
+
+论文实验覆盖开源模型、多模态模型和 GPT-3.5 API 等负载，报告最高 **6.4× 吞吐提升**和最高 **3.7× 延迟降低**。核心结论是：**前端暴露工作流结构，运行时利用这些结构做跨调用优化，二者协同才能获得最大收益。**
+
+### 7. SGLang 是否只是在 vLLM 上加入 Radix Tree？
+
+不是。论文中的 SGLang Runtime 是独立实现，vLLM 0.2.5 是对照系统，并非其代码底座。若只看开源模型运行时，RadixAttention 确实是最突出的贡献之一；但论文的整体核心是**前端语言与运行时协同设计**，运行时还包括压缩 FSM 和 API speculative execution。RadixAttention 也不只是加入一棵 radix tree，而是由 KV Cache 持久保留、前缀树匹配、LRU 淘汰和 cache-aware scheduling 共同组成。
+
+不过，SGLang 的确采用了 **PagedAttention 所代表的分页式 KV Cache 存储思想**，这项工作由 vLLM 提出。两者职责不同：PagedAttention 解决 KV Cache **怎样用非连续页高效存放和分配**；RadixAttention 在此基础上解决这些 KV 页**属于哪个 token 前缀、能否跨调用复用、保留或淘汰哪些页**。因此可以说 SGLang 借用了 vLLM 的底层思想，但不能说 SGLang 是直接在 vLLM 系统上加了一棵树。
+
 ## 资料来源
 
 - [SGLang 论文](../2026-07-20-SGLang-Efficient-Execution-of-Structured-Language-Model-Programs/SGLang%20Efficient%20Execution%20of%20Structured%20Language%20Model%20Programs.pdf)
